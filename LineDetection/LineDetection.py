@@ -2,7 +2,7 @@ import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 
-cap = cv2.VideoCapture("4Kvideo.mp4")
+cap = cv2.VideoCapture("test_4.mp4")
 
 def line_intersection(line1, line2):
     xdiff = (line1[0][0] - line1[1][0], line2[0][0] - line2[1][0])
@@ -29,8 +29,8 @@ def canny_func(image):
 
 def region_of_interest(image):
     height = image.shape[0]
-    # width = image.shape[1]
-    polygons = np.array([[(500,425),(200,height),(1100,height), (780,425)]])
+    width = image.shape[1]
+    polygons = np.array([[(0,int(height//2)),(0,height),(width,height), (width,int(height//2))]])
     # polygons = np.array([[(125,177),(68,height),(366,height), (305,177)]])
     mask = np.zeros_like(image)
     cv2.fillPoly(mask,polygons,255)
@@ -122,6 +122,7 @@ while True:
         #Finding distance
         width = frame.shape[1]
         height = frame.shape[0]
+        print("width: ",width,"height: ",height)
         if len(averaged_lines) != 2:
             if right_exist:
                 x1 = width // 2
