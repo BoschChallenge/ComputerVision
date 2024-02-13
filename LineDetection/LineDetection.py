@@ -2,7 +2,28 @@ import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 
-cap = cv2.VideoCapture("test_4.mp4")
+cap = cv2.VideoCapture("full_hd.mp4")
+
+def warpImage(img):
+    h = img.shape[0]
+    w = img.shape[1]
+    points = createPoints(w,h,0.2,0.53) #adjust parameters
+    pts1 = np.float32(points)
+    pts2 = np.float32([[0,0],[w,0],[0,h],[w,h]])
+    matrix = cv2.getPerspectiveTransform(pts1,pts2)
+    imgWarp = cv2.warpPerspective(img,matrix,(w,h))
+
+    return imgWarp
+    
+#trial and error function
+def createPoints(width,height,scalew,scaleh):
+    point1 = [scalew*width,scaleh*height]
+    point2 = [(1-scalew)*width,scaleh*height]
+    point3 = [0,height]
+    point4 = [width,height]
+    points = [point1,point2,point3,point4]
+    
+    return points
 
 def line_intersection(line1, line2):
     xdiff = (line1[0][0] - line1[1][0], line2[0][0] - line2[1][0])
@@ -23,26 +44,33 @@ def line_intersection(line1, line2):
 def canny_func(image):
     gray = cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
     blur = cv2.GaussianBlur(gray, (3, 3), 0)
-    edges = cv2.Canny(blur,50,100)
+    edges = cv2.Canny(blur,50,150)
     edg = region_of_interest(edges)
     return edg
 
 def region_of_interest(image):
     height = image.shape[0]
-    width = image.shape[1]
-    polygons = np.array([[(0,int(height//2)),(0,height),(width,height), (width,int(height//2))]])
+    # width = image.shape[1]
+    polygons1 = np.array([[(250,330),(50,height),(220,height), (950,330)]])
+    # polygons2 = np.array([[(1200,750),(1500,height),(1800,height), (1400,750)]])
+    polygons2 = np.array([[(950,330),(1580,height),(1900,height), (1500,330)]])
+    # polygons = np.array([[(0,int(height//2)),(0,height),(width,height), (width,int(height//2))]])
     # polygons = np.array([[(125,177),(68,height),(366,height), (305,177)]])
     mask = np.zeros_like(image)
-    cv2.fillPoly(mask,polygons,255)
+    cv2.fillPoly(mask,polygons1,255)
+    cv2.fillPoly(mask,polygons2,255)
     masked_image = cv2.bitwise_and(image,mask)
     return masked_image
 
 def make_coordinates(image,line_parameters):
     slope,intercept = line_parameters
     y1 = image.shape[0]
-    y2 = int(y1*(3.7/5))
+    y2 = int(y1*(3/5))
     x1 = int((y1 - intercept)/slope)
     x2 = int((y2 - intercept)/slope)
+    if x1 < 0 or x1 > 1920 or x2 < 0 or x2 > 1920:
+        return np.array([0,0,0,0])
+    
     return np.array([x1,y1,x2,y2])
 
 def average_slope_intercept(image,lines):
@@ -106,29 +134,31 @@ def display_lines(image,lines):
     if lines is not None:
         for line in lines:
             x1,y1,x2,y2 = line.reshape(4)
-            cv2.line(line_image, (x1, y1), (x2, y2), (255, 0, 0), 5)
+            cv2.line(line_image, (x1, y1), (x2, y2), (255, 0, 0), 8)
 
     return line_image
 
 while True:
     ret,frame = cap.read()
-    
-    edges = canny_func(frame)
+
+    img = warpImage(frame)
+    edges = canny_func(img)
     lines = cv2.HoughLinesP(edges, 1, np.pi / 180, 150, np.array([]), minLineLength=40, maxLineGap=5)
-    averaged_lines = average_slope_intercept(frame,lines)
+    averaged_lines = average_slope_intercept(img,lines)
 
     if averaged_lines is not None:
+        print(averaged_lines)
         line_image = display_lines(frame,averaged_lines)
         #Finding distance
-        width = frame.shape[1]
-        height = frame.shape[0]
-        print("width: ",width,"height: ",height)
+        width = img.shape[1]
+        height = img.shape[0]
+        x1 = width // 2
+        y1 = height - int(height//10)
+        x2 = width
+        y2 = y1
+        # print("width: ",width,"height: ",height)
         if len(averaged_lines) != 2:
             if right_exist:
-                x1 = width // 2
-                y1 = height - int(height//10)
-                x2 = width
-                y2 = y1
                 rx1,ry1,rx2,ry2 = averaged_lines[0].reshape(4)
                 x,y = line_intersection(([x1,y1],[x2,y2]),([rx1,ry1],[rx2,ry2]))
                 if(x != 0 and y != 0):
@@ -136,11 +166,8 @@ while True:
                     temp = (x - x1)*(x - x1) + (y - y1)*(y - y1)
                     length = pow(temp,0.5)
                     print(length)
+
             elif left_exist:
-                x1 = width // 2
-                y1 = height - int(height//10)
-                x2 = 0
-                y2 = y1
                 rx1,ry1,rx2,ry2 = averaged_lines[0].reshape(4)
                 x,y = line_intersection(([x1,y1],[x2,y2]),([rx1,ry1],[rx2,ry2]))
                 if(x != 0 and y != 0):
@@ -148,11 +175,8 @@ while True:
                     temp = (x - x1)*(x - x1) + (y - y1)*(y - y1)
                     length = pow(temp,0.5)
                     print(length)
+
         else:
-            x1 = width // 2
-            y1 = height - int(height//10)
-            x2 = width
-            y2 = y1
             rx1,ry1,rx2,ry2 = averaged_lines[1].reshape(4)
             x,y = line_intersection(([x1,y1],[x2,y2]),([rx1,ry1],[rx2,ry2]))
             if(x != 0 and y != 0):
@@ -160,11 +184,11 @@ while True:
                 temp = (x - x1)*(x - x1) + (y - y1)*(y - y1)
                 length = pow(temp,0.5)
                 print(length)
-    else:
-        line_image = display_lines(frame,lines)
 
-    
-    combo_image = cv2.addWeighted(frame,0.8,line_image,1,1)
+        combo_image = cv2.addWeighted(img,0.5,line_image,1,1)
+    else:
+        line_image = np.zeros_like(img)
+        combo_image = cv2.addWeighted(img,0.5,line_image,1,1)
 
     cv2.imshow('Result',combo_image)
     if cv2.waitKey(1) == ord('q'):
