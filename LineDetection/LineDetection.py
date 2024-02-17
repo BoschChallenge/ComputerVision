@@ -1,13 +1,29 @@
 import numpy as np
 import cv2
-import matplotlib.pyplot as plt
+import math
 
-cap = cv2.VideoCapture("full_hd.mp4")
+cap = cv2.VideoCapture("full_hd2.mp4")
+
+def slope(x1, y1, x2, y2): # Line slope given two points:
+    if (x2-x1) != 0:
+        return (y2-y1)/(x2-x1)
+    else:
+        return 0
+
+def angle(s1, s2): 
+    return math.degrees(math.atan((s2-s1)/(1+(s2*s1))))
+
+def calculateAngle(lineA,lineB):
+    slope1 = slope(lineA[0][0], lineA[0][1], lineA[1][0], lineA[1][1])
+    slope2 = slope(lineB[0][0], lineB[0][1], lineB[1][0], lineB[1][1])
+
+    ang = angle(slope1, slope2)
+    return ang
 
 def warpImage(img):
     h = img.shape[0]
     w = img.shape[1]
-    points = createPoints(w,h,0.2,0.53) #adjust parameters
+    points = createPoints(w,h,0.2,0.55) #adjust parameters
     pts1 = np.float32(points)
     pts2 = np.float32([[0,0],[w,0],[0,h],[w,h]])
     matrix = cv2.getPerspectiveTransform(pts1,pts2)
@@ -147,16 +163,16 @@ while True:
     averaged_lines = average_slope_intercept(img,lines)
 
     if averaged_lines is not None:
-        print(averaged_lines)
         line_image = display_lines(frame,averaged_lines)
         #Finding distance
         width = img.shape[1]
         height = img.shape[0]
+        # MidPoint for distance from line
         x1 = width // 2
         y1 = height - int(height//10)
         x2 = width
         y2 = y1
-        # print("width: ",width,"height: ",height)
+
         if len(averaged_lines) != 2:
             if right_exist:
                 rx1,ry1,rx2,ry2 = averaged_lines[0].reshape(4)
@@ -165,7 +181,9 @@ while True:
                     cv2.line(line_image,(x1,y1),(int(x),int(y)),(0,0,255),5)
                     temp = (x - x1)*(x - x1) + (y - y1)*(y - y1)
                     length = pow(temp,0.5)
-                    print(length)
+                    print("length:",length)
+                    angl = calculateAngle(((0,height),(width,height)),((rx1,ry1),(rx2,ry2)))
+                    print("angle:",abs(angl))
 
             elif left_exist:
                 rx1,ry1,rx2,ry2 = averaged_lines[0].reshape(4)
@@ -174,7 +192,9 @@ while True:
                     cv2.line(line_image,(x1,y1),(int(x),int(y)),(0,0,255),5)
                     temp = (x - x1)*(x - x1) + (y - y1)*(y - y1)
                     length = pow(temp,0.5)
-                    print(length)
+                    print("length:",length)
+                    angl = calculateAngle(((0,height),(width,height)),((rx1,ry1),(rx2,ry2)))
+                    print("angle:",abs(angl))
 
         else:
             rx1,ry1,rx2,ry2 = averaged_lines[1].reshape(4)
@@ -183,7 +203,9 @@ while True:
                 cv2.line(line_image,(x1,y1),(int(x),int(y)),(0,0,255),5)
                 temp = (x - x1)*(x - x1) + (y - y1)*(y - y1)
                 length = pow(temp,0.5)
-                print(length)
+                print("length:",length)
+                angl = calculateAngle(((0,height),(width,height)),((rx1,ry1),(rx2,ry2)))
+                print("angle:",abs(angl))
 
         combo_image = cv2.addWeighted(img,0.5,line_image,1,1)
     else:
