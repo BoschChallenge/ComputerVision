@@ -2,7 +2,7 @@ import numpy as np
 import cv2
 import math
 
-cap = cv2.VideoCapture("full_hd2.mp4")
+# cap = cv2.VideoCapture("full_hd2.mp4")
 
 def slope(x1, y1, x2, y2): # Line slope given two points:
     if (x2-x1) != 0:
@@ -154,8 +154,72 @@ def display_lines(image,lines):
 
     return line_image
 
-while True:
-    ret,frame = cap.read()
+# while True:
+#     ret,frame = cap.read()
+
+#     img = warpImage(frame)
+#     edges = canny_func(img)
+#     lines = cv2.HoughLinesP(edges, 1, np.pi / 180, 150, np.array([]), minLineLength=40, maxLineGap=5)
+#     averaged_lines = average_slope_intercept(img,lines)
+
+#     if averaged_lines is not None:
+#         line_image = display_lines(frame,averaged_lines)
+#         #Finding distance
+#         width = img.shape[1]
+#         height = img.shape[0]
+#         # MidPoint for distance from line
+#         x1 = width // 2
+#         y1 = height - int(height//10)
+#         x2 = width
+#         y2 = y1
+
+#         if len(averaged_lines) != 2:
+#             if right_exist:
+#                 rx1,ry1,rx2,ry2 = averaged_lines[0].reshape(4)
+#                 x,y = line_intersection(([x1,y1],[x2,y2]),([rx1,ry1],[rx2,ry2]))
+#                 if(x != 0 and y != 0):
+#                     cv2.line(line_image,(x1,y1),(int(x),int(y)),(0,0,255),5)
+#                     temp = (x - x1)*(x - x1) + (y - y1)*(y - y1)
+#                     length = pow(temp,0.5)
+#                     print("length:",length)
+#                     angl = calculateAngle(((0,height),(width,height)),((rx1,ry1),(rx2,ry2)))
+#                     print("angle:",abs(angl))
+
+#             elif left_exist:
+#                 rx1,ry1,rx2,ry2 = averaged_lines[0].reshape(4)
+#                 x,y = line_intersection(([x1,y1],[x2,y2]),([rx1,ry1],[rx2,ry2]))
+#                 if(x != 0 and y != 0):
+#                     cv2.line(line_image,(x1,y1),(int(x),int(y)),(0,0,255),5)
+#                     temp = (x - x1)*(x - x1) + (y - y1)*(y - y1)
+#                     length = pow(temp,0.5)
+#                     print("length:",length)
+#                     angl = calculateAngle(((0,height),(width,height)),((rx1,ry1),(rx2,ry2)))
+#                     print("angle:",abs(angl))
+
+#         else:
+#             rx1,ry1,rx2,ry2 = averaged_lines[1].reshape(4)
+#             x,y = line_intersection(([x1,y1],[x2,y2]),([rx1,ry1],[rx2,ry2]))
+#             if(x != 0 and y != 0):
+#                 cv2.line(line_image,(x1,y1),(int(x),int(y)),(0,0,255),5)
+#                 temp = (x - x1)*(x - x1) + (y - y1)*(y - y1)
+#                 length = pow(temp,0.5)
+#                 print("length:",length)
+#                 angl = calculateAngle(((0,height),(width,height)),((rx1,ry1),(rx2,ry2)))
+#                 print("angle:",abs(angl))
+
+#         combo_image = cv2.addWeighted(img,0.5,line_image,1,1)
+#     else:
+#         line_image = np.zeros_like(img)
+#         combo_image = cv2.addWeighted(img,0.5,line_image,1,1)
+
+#     cv2.imshow('Result',combo_image)
+#     if cv2.waitKey(1) == ord('q'):
+#         break
+
+# cap.relase()
+# cv2.destroyAllWindows()
+
+def detectLines(frame):
 
     img = warpImage(frame)
     edges = canny_func(img)
@@ -163,7 +227,6 @@ while True:
     averaged_lines = average_slope_intercept(img,lines)
 
     if averaged_lines is not None:
-        line_image = display_lines(frame,averaged_lines)
         #Finding distance
         width = img.shape[1]
         height = img.shape[0]
@@ -178,44 +241,30 @@ while True:
                 rx1,ry1,rx2,ry2 = averaged_lines[0].reshape(4)
                 x,y = line_intersection(([x1,y1],[x2,y2]),([rx1,ry1],[rx2,ry2]))
                 if(x != 0 and y != 0):
-                    cv2.line(line_image,(x1,y1),(int(x),int(y)),(0,0,255),5)
                     temp = (x - x1)*(x - x1) + (y - y1)*(y - y1)
                     length = pow(temp,0.5)
-                    print("length:",length)
                     angl = calculateAngle(((0,height),(width,height)),((rx1,ry1),(rx2,ry2)))
-                    print("angle:",abs(angl))
+                    return length,angl,True
 
             elif left_exist:
                 rx1,ry1,rx2,ry2 = averaged_lines[0].reshape(4)
                 x,y = line_intersection(([x1,y1],[x2,y2]),([rx1,ry1],[rx2,ry2]))
                 if(x != 0 and y != 0):
-                    cv2.line(line_image,(x1,y1),(int(x),int(y)),(0,0,255),5)
                     temp = (x - x1)*(x - x1) + (y - y1)*(y - y1)
                     length = pow(temp,0.5)
-                    print("length:",length)
-                    angl = calculateAngle(((0,height),(width,height)),((rx1,ry1),(rx2,ry2)))
-                    print("angle:",abs(angl))
+                    angl = abs(calculateAngle(((0,height),(width,height)),((rx1,ry1),(rx2,ry2))))
+                    return length,angl,False
+            else:
+                return 0,0,False
 
         else:
             rx1,ry1,rx2,ry2 = averaged_lines[1].reshape(4)
             x,y = line_intersection(([x1,y1],[x2,y2]),([rx1,ry1],[rx2,ry2]))
             if(x != 0 and y != 0):
-                cv2.line(line_image,(x1,y1),(int(x),int(y)),(0,0,255),5)
                 temp = (x - x1)*(x - x1) + (y - y1)*(y - y1)
                 length = pow(temp,0.5)
-                print("length:",length)
                 angl = calculateAngle(((0,height),(width,height)),((rx1,ry1),(rx2,ry2)))
-                print("angle:",abs(angl))
+                return length,angl,True  
 
-        combo_image = cv2.addWeighted(img,0.5,line_image,1,1)
     else:
-        line_image = np.zeros_like(img)
-        combo_image = cv2.addWeighted(img,0.5,line_image,1,1)
-
-    cv2.imshow('Result',combo_image)
-    if cv2.waitKey(1) == ord('q'):
-        break
-
-
-cap.relase()
-cv2.destroyAllWindows()
+        return 0,0,False
