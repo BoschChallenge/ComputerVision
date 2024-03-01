@@ -1,7 +1,5 @@
 from LineDetection import LineDetect
-import numpy as np
 import cv2
-import math
 
 cap = cv2.VideoCapture("full_hd2.mp4")
 LD = LineDetect()
