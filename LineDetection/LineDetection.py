@@ -6,7 +6,7 @@ class LineDetect:
     def __init__(self) -> None:
         pass
         
-    def slope(self,x1, y1, x2, y2): # Line slope given two points:
+    def slope(self,x1, y1, x2, y2):
         if (x2-x1) != 0:
             return (y2-y1)/(x2-x1)
         else:
@@ -102,7 +102,7 @@ class LineDetect:
         right_exist = False
         if lines is not None:
             for line in lines:
-                x1,y1,x2,y2 = line.reshape(4) #IDEA if x1 is less than half of the width it is left line and same for opposite
+                x1,y1,x2,y2 = line.reshape(4)
                 parameters = np.polyfit((x1,x2),(y1,y2),1)  
                 slope = parameters[0]
                 intercept = parameters[1]
@@ -192,8 +192,6 @@ class LineDetect:
                         length = pow(temp,0.5)
                         angl = abs(self.calculateAngle(((0,height),(width,height)),((rx1,ry1),(rx2,ry2))))
                         return length,angl,False
-                else:
-                    return 0,0,False
 
             else:
                 rx1,ry1,rx2,ry2 = averaged_lines[1].reshape(4)
@@ -202,73 +200,8 @@ class LineDetect:
                     temp = (x - x1)*(x - x1) + (y - y1)*(y - y1)
                     length = pow(temp,0.5)
                     angl = self.calculateAngle(((0,height),(width,height)),((rx1,ry1),(rx2,ry2)))
-                    return length,angl,True  
-
+                    return length,angl,True 
+                 
+            return 0,0,False 
         else:
             return 0,0,False
-
-# while True:
-#     ret,frame = cap.read()
-
-#     img = warpImage(frame)
-#     edges = canny_func(img)
-#     lines = cv2.HoughLinesP(edges, 1, np.pi / 180, 150, np.array([]), minLineLength=40, maxLineGap=5)
-#     averaged_lines = average_slope_intercept(img,lines)
-
-#     if averaged_lines is not None:
-#         line_image = display_lines(frame,averaged_lines)
-#         #Finding distance
-#         width = img.shape[1]
-#         height = img.shape[0]
-#         # MidPoint for distance from line
-#         x1 = width // 2
-#         y1 = height - int(height//10)
-#         x2 = width
-#         y2 = y1
-
-#         if len(averaged_lines) != 2:
-#             if right_exist:
-#                 rx1,ry1,rx2,ry2 = averaged_lines[0].reshape(4)
-#                 x,y = line_intersection(([x1,y1],[x2,y2]),([rx1,ry1],[rx2,ry2]))
-#                 if(x != 0 and y != 0):
-#                     cv2.line(line_image,(x1,y1),(int(x),int(y)),(0,0,255),5)
-#                     temp = (x - x1)*(x - x1) + (y - y1)*(y - y1)
-#                     length = pow(temp,0.5)
-#                     print("length:",length)
-#                     angl = calculateAngle(((0,height),(width,height)),((rx1,ry1),(rx2,ry2)))
-#                     print("angle:",abs(angl))
-
-#             elif left_exist:
-#                 rx1,ry1,rx2,ry2 = averaged_lines[0].reshape(4)
-#                 x,y = line_intersection(([x1,y1],[x2,y2]),([rx1,ry1],[rx2,ry2]))
-#                 if(x != 0 and y != 0):
-#                     cv2.line(line_image,(x1,y1),(int(x),int(y)),(0,0,255),5)
-#                     temp = (x - x1)*(x - x1) + (y - y1)*(y - y1)
-#                     length = pow(temp,0.5)
-#                     print("length:",length)
-#                     angl = calculateAngle(((0,height),(width,height)),((rx1,ry1),(rx2,ry2)))
-#                     print("angle:",abs(angl))
-
-#         else:
-#             rx1,ry1,rx2,ry2 = averaged_lines[1].reshape(4)
-#             x,y = line_intersection(([x1,y1],[x2,y2]),([rx1,ry1],[rx2,ry2]))
-#             if(x != 0 and y != 0):
-#                 cv2.line(line_image,(x1,y1),(int(x),int(y)),(0,0,255),5)
-#                 temp = (x - x1)*(x - x1) + (y - y1)*(y - y1)
-#                 length = pow(temp,0.5)
-#                 print("length:",length)
-#                 angl = calculateAngle(((0,height),(width,height)),((rx1,ry1),(rx2,ry2)))
-#                 print("angle:",abs(angl))
-
-#         combo_image = cv2.addWeighted(img,0.5,line_image,1,1)
-#     else:
-#         line_image = np.zeros_like(img)
-#         combo_image = cv2.addWeighted(img,0.5,line_image,1,1)
-
-#     cv2.imshow('Result',combo_image)
-#     if cv2.waitKey(1) == ord('q'):
-#         break
-
-# cap.relase()
-# cv2.destroyAllWindows()
-

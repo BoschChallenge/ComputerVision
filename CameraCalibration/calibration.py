@@ -65,6 +65,7 @@ pickle.dump(cameraMatrix, open( "cameraMatrix.pkl", "wb" ))
 pickle.dump(dist, open( "dist.pkl", "wb" ))
 
 
+
 ############## UNDISTORTION #####################################################
 
 img = cv.imread('images/img4.png')
